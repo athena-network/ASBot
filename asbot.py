@@ -61,6 +61,7 @@ async def check_transactions(pool):
 @client.event
 async def on_ready():
 	print("connected")
+	await client.send_message(channel,'```Hey, I am online..```')
 	last_block_height = daemon.get_block_count()['result']['count']
 	mineable_block = 0
 	while True:
@@ -75,13 +76,12 @@ async def on_ready():
 			continue
 		if not pool:
 			mineable_block = 0
-			print('pool is empty')
 		else:
 			await check_transactions(pool)
 			if len(present_transactions) >= 2:
 				if not mineable_block:
 					mineable_block = 1
-					mine_msg = '**New Block ' + str(last_block_height) + ' is ready to be mined**'
+					mine_msg = '```**New Block ' + str(last_block_height) + ' is ready to be mined**```'
 					print(mine_msg)
 					await client.send_message(channel,mine_msg)
 					
