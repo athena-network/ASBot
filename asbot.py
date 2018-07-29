@@ -35,7 +35,7 @@ client = discord.Client()
 channel_id = open('channel').read()
 channel = discord.Object(channel_id)
 
-daemon = Athena(port=11898)
+daemon = Athena()
 
 present_transactions = []
 
@@ -81,7 +81,7 @@ async def on_ready():
 			if len(present_transactions) >= 2:
 				if not mineable_block:
 					mineable_block = 1
-					mine_msg = '**New Block is ready to be mined**'
+					mine_msg = '**New Block ' + str(last_block_height) + ' is ready to be mined**'
 					print(mine_msg)
 					await client.send_message(channel,mine_msg)
 					
