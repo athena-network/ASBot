@@ -61,9 +61,9 @@ async def check_transactions(pool):
 @client.event
 async def on_ready():
 	print("connected")
-	await client.send_message(channel,'```Hey, I am online..```')
 	last_block_height = daemon.get_block_count()['result']['count']
 	mineable_block = 0
+	await client.send_message(channel,'```Top Block is: ' + str(last_block_height) + '```')
 	while True:
 		present_height = daemon.get_block_count()['result']['count']
 		pool = daemon.get_transaction_pool()['result']['transactions']
@@ -73,6 +73,9 @@ async def on_ready():
 			await client.send_message(channel,block_msg)
 			mineable_block = 0
 			last_block_height = present_height
+			top_block_msg = '```New Top Block is: ' + str(last_block_height) + '```'
+			await client.send_message(channel,top_block_msg)
+			print(top_block_msg)
 			continue
 		if not pool:
 			mineable_block = 0
