@@ -1,4 +1,6 @@
 import requests
+import urllib3
+import simplejson
 import json
 import time
 import discord
@@ -16,10 +18,18 @@ class Athena:
 			'method':method,
 			'params':kwargs
 		}
-		response = requests.post(self.url,json.dumps(payload),self.headers).json()
-		if 'error' in response:
-			raise ValueError(response['error'])
-		return response
+
+		try:
+			response = requests.post(self.url,json.dumps(payload),self.headers)
+		except (requests.exceptions.ConnectionError, urllib3.exceptions.ProtocolError):
+			return ""
+
+		try:
+			msg = response.json()
+		except (json.decoder.JSONDecodeError, simplejson.errors.JSONDecodeError):
+			msg = ""
+
+		return msg
 
 	def get_transaction_pool(self):
 		return self._make_request('f_on_transactions_pool_json')
@@ -78,6 +88,7 @@ async def on_ready():
 			print(top_block_msg)
 			continue
 		if not pool:
+			present_transactions = []
 			mineable_block = 0
 		else:
 			await check_transactions(pool)
