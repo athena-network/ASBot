@@ -9,7 +9,7 @@ import asyncio
 class Athena:
 
 	def __init__(self,host='127.0.0.1',port=12001):
-		self.url = f'http://{host}:{port}/json_rpc'
+		self.url = "http://" + host + ":" + str(port) + "/json_rpc"
 		self.headers = {'content-type':'application/json'}
 
 	def _make_request(self,method,**kwargs):
