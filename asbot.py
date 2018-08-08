@@ -19,15 +19,8 @@ class Athena:
 			'params':kwargs
 		}
 
-		try:
-			response = requests.post(self.url,json.dumps(payload),self.headers)
-		except (requests.exceptions.ConnectionError, urllib3.exceptions.ProtocolError):
-			return ""
-
-		try:
-			msg = response.json()
-		except (json.decoder.JSONDecodeError, simplejson.errors.JSONDecodeError):
-			msg = ""
+		response = requests.post(self.url,json.dumps(payload),self.headers)
+		msg = response.json()
 
 		return msg
 
@@ -73,32 +66,50 @@ async def on_ready():
 	print("connected")
 	last_block_height = daemon.get_block_count()['result']['count']
 	mineable_block = 0
+	global present_transactions
 	await client.send_message(channel,'```Top Block is: ' + str(last_block_height) + '```')
 	while True:
-		present_height = daemon.get_block_count()['result']['count']
-		pool = daemon.get_transaction_pool()['result']['transactions']
-		if last_block_height != present_height:
-			block_msg = "```Block " + str(last_block_height) + ' is mined```'
-			print(block_msg)
-			await client.send_message(channel,block_msg)
-			mineable_block = 0
-			last_block_height = present_height
-			top_block_msg = '```New Top Block is: ' + str(last_block_height) + '```'
-			await client.send_message(channel,top_block_msg)
-			print(top_block_msg)
-			continue
-		if not pool:
-			present_transactions = []
-			mineable_block = 0
-		else:
-			await check_transactions(pool)
-			if len(present_transactions) >= 2:
-				if not mineable_block:
-					mineable_block = 1
-					mine_msg = '```**New Block ' + str(last_block_height) + ' is ready to be mined**```'
-					print(mine_msg)
-					await client.send_message(channel,mine_msg)
-					
-		await asyncio.sleep(5)
+		try:
+			present_height = daemon.get_block_count()['result']['count']
+			pool = daemon.get_transaction_pool()['result']['transactions']
+			if last_block_height != present_height:
+				block_msg = "```Block " + str(last_block_height) + ' is mined```'
+				print(block_msg)
+				await client.send_message(channel,block_msg)
+				mineable_block = 0
+				if not pool:
+					present_transactions = []
+				else:
+					await check_transactions(pool)
+				last_block_height = present_height
+				top_block_msg = '```New Top Block is: ' + str(last_block_height) + '```'
+				await client.send_message(channel,top_block_msg)
+				print(top_block_msg)
+				continue
+			if not pool:
+				mineable_block = 0
+			else:
+				await check_transactions(pool)
+				if len(present_transactions) >= 2:
+					if not mineable_block:
+						mineable_block = 1
+						mine_msg = '```**New Block ' + str(last_block_height) + ' is ready to be mined**```'
+						print(mine_msg)
+						await client.send_message(channel,mine_msg)
+						
+			await asyncio.sleep(5)
+		except json.decoder.JSONDecodeError:
+			print("JSONDecodeError Occurred")
+		except simplejson.errors.JSONDecodeError:
+			print("SimpleJSONDecodeError Occurred")
+		except requests.exceptions.ConnectionError:
+			print("ConnectionError Occurred")
+		except urllib3.exceptions.ProtocolError:
+			print("ProtocolError Occurred")
+		except KeyError:
+			print("KeyError Occured")
+		except ValueError:
+			print("ValueError Occurred")
+
 
 client.run(token)
